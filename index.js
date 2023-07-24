@@ -38,21 +38,26 @@ app.listen(port, () => {
 //
 
 const bot = new Telegraf(process.env.BOT_TOKEN);
-bot.start((ctx) => ctx.reply('Welcome'));
-bot.help((ctx) => ctx.reply('Send me a sticker'));
-bot.on(message('sticker'), (ctx) => ctx.reply('👍'));
+bot.start((ctx) => ctx.reply('Welcome! Start uploading!'));
+bot.help((ctx) => ctx.reply('Send me any file, and i will turn it into a short downloadable link!'));
 bot.on(message('document'), async (ctx) =>{
-    if(!ctx.message.document.file_name) return;
-    //ctx.telegram.getFileLink(ctx.message.document.file_id).then(async url => await download(url,nanoid(),ctx.message.document.file_name))
+    if(!ctx.message.document.file_id) return;
     ctx.reply("Got file, uploading to a cloud")
-    const id =  nanoid()
+    const id = nanoid()
     const url = await ctx.telegram.getFileLink(ctx.message.document.file_id)
     const res = await download(url,id,ctx.message.document.file_name)
     if(res==="error"){ return await ctx.reply("Error happened. Try again later.")}
     await ctx.reply(res);
 })
-
-bot.hears('hi', (ctx) => ctx.reply(nanoid()));
+bot.on(message('photo'), async (ctx) =>{
+    if(!ctx.message.photo[ctx.message.photo.length-1].file_id) return;
+    ctx.reply("Got photo, uploading to a cloud")
+    const id = nanoid()
+    const url = await ctx.telegram.getFileLink(ctx.message.photo[ctx.message.photo.length-1].file_id)
+    const res = await download(url,id,ctx.message.photo[0].file_unique_id+".jpg")
+    if(res==="error"){ return await ctx.reply("Error happened. Try again later.")}
+    await ctx.reply(res);
+})
 bot.launch();
 
 // Enable graceful stop
